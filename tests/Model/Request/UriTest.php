@@ -17,9 +17,6 @@ class UriTest extends TestCase
 
         self::assertEquals($uriString, (string)new Uri($uriString));
 
-        $uriString = '//user:pass@example.com:80/test?test=2#abc';
-        self::assertEquals($uriString, (string)new Uri($uriString));
-
         $uriString = 'https://example.com:80/test?test=2#abc';
         self::assertEquals($uriString, (string)new Uri($uriString));
 
@@ -27,9 +24,6 @@ class UriTest extends TestCase
         self::assertEquals($uriString, (string)new Uri($uriString));
 
         $uriString = 'https://example.com/test';
-        self::assertEquals($uriString, (string)new Uri($uriString));
-
-        $uriString = '//example.com/';
         self::assertEquals($uriString, (string)new Uri($uriString));
 
         $uriString = 'http://example.com';
@@ -103,5 +97,13 @@ class UriTest extends TestCase
             'http://example.com#halloWelt',
             (string)(new Uri('http://example.com'))->withFragment('halloWelt')
         );
+    }
+
+    /**
+     * @expectedException \InvalidArgumentException
+     */
+    public function testInvalidUri()
+    {
+        new Uri('hallo,welt');
     }
 }

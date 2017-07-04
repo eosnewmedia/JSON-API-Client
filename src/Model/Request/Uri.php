@@ -13,42 +13,42 @@ class Uri implements UriInterface
     /**
      * @var string
      */
-    protected $scheme;
+    private $scheme;
 
     /**
      * @var string
      */
-    protected $host;
+    private $host;
 
     /**
      * @var string
      */
-    protected $port;
+    private $port;
 
     /**
      * @var string
      */
-    protected $user;
+    private $user;
 
     /**
      * @var string
      */
-    protected $password;
+    private $password;
 
     /**
      * @var string
      */
-    protected $path;
+    private $path;
 
     /**
      * @var string
      */
-    protected $query;
+    private $query;
 
     /**
      * @var string
      */
-    protected $fragment;
+    private $fragment;
 
     /**
      * @param string $uri
@@ -56,7 +56,7 @@ class Uri implements UriInterface
      */
     public function __construct(string $uri)
     {
-        if (!parse_url($uri)) {
+        if (!filter_var($uri, FILTER_VALIDATE_URL) || !parse_url($uri)) {
             throw new \InvalidArgumentException('Invalid uri given: ' . $uri);
         }
 
@@ -84,7 +84,7 @@ class Uri implements UriInterface
      * @see https://tools.ietf.org/html/rfc3986#section-3.1
      * @return string The URI scheme.
      */
-    public function getScheme()
+    public function getScheme(): string
     {
         return $this->scheme;
     }
@@ -107,7 +107,7 @@ class Uri implements UriInterface
      * @see https://tools.ietf.org/html/rfc3986#section-3.2
      * @return string The URI authority, in "[user-info@]host[:port]" format.
      */
-    public function getAuthority()
+    public function getAuthority(): string
     {
         return
             ($this->getUserInfo() !== '' ? $this->getUserInfo() . '@' : '') .
@@ -130,9 +130,11 @@ class Uri implements UriInterface
      *
      * @return string The URI user information, in "username[:password]" format.
      */
-    public function getUserInfo()
+    public function getUserInfo(): string
     {
-        return $this->user !== '' ? ($this->password !== '' ? $this->user . ':' . $this->password : $this->user) : '';
+        $password = $this->password !== '' ? ':' . $this->password : '';
+
+        return $this->user !== '' ? $this->user . $password : '';
     }
 
     /**
@@ -146,7 +148,7 @@ class Uri implements UriInterface
      * @see http://tools.ietf.org/html/rfc3986#section-3.2.2
      * @return string The URI host.
      */
-    public function getHost()
+    public function getHost(): string
     {
         return $this->host;
     }
@@ -196,7 +198,7 @@ class Uri implements UriInterface
      * @see https://tools.ietf.org/html/rfc3986#section-3.3
      * @return string The URI path.
      */
-    public function getPath()
+    public function getPath(): string
     {
         return $this->path;
     }
@@ -221,7 +223,7 @@ class Uri implements UriInterface
      * @see https://tools.ietf.org/html/rfc3986#section-3.4
      * @return string The URI query string.
      */
-    public function getQuery()
+    public function getQuery(): string
     {
         return $this->query;
     }
@@ -242,7 +244,7 @@ class Uri implements UriInterface
      * @see https://tools.ietf.org/html/rfc3986#section-3.5
      * @return string The URI fragment.
      */
-    public function getFragment()
+    public function getFragment(): string
     {
         return $this->fragment;
     }
@@ -438,7 +440,7 @@ class Uri implements UriInterface
      * @see http://tools.ietf.org/html/rfc3986#section-4.1
      * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         $uri = $this->getScheme() !== '' ? $this->getScheme() . ':' : '';
         $uri .= $this->getAuthority() !== '' ? '//' . $this->getAuthority() : '';
