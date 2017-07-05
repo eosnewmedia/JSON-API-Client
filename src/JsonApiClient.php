@@ -12,10 +12,14 @@ use Enm\JsonApi\Exception\UnsupportedMediaTypeException;
 use Enm\JsonApi\JsonApiInterface;
 use Enm\JsonApi\JsonApiTrait;
 use Enm\JsonApi\Model\Document\DocumentInterface;
+use Enm\JsonApi\Model\Request\FetchRequest;
+use Enm\JsonApi\Model\Request\JsonApiRequest;
 use Enm\JsonApi\Model\Request\JsonApiRequestInterface;
 use Enm\JsonApi\Model\Request\FetchRequestInterface;
+use Enm\JsonApi\Model\Request\SaveRequest;
 use Enm\JsonApi\Model\Request\SaveRequestInterface;
 use Enm\JsonApi\Model\Resource\Link\LinkInterface;
+use Enm\JsonApi\Model\Resource\ResourceInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\UriInterface;
 use Psr\Log\LoggerAwareInterface;
@@ -49,6 +53,42 @@ class JsonApiClient implements LoggerAwareInterface, JsonApiInterface
     {
         $this->baseUrl = $baseUrl;
         $this->httpClient = $httpClient;
+    }
+
+    /**
+     * @param string $type
+     * @param string $id
+     * @return JsonApiRequestInterface
+     * @throws JsonApiException
+     */
+    public function jsonApiRequest(string $type, string $id = ''): JsonApiRequestInterface
+    {
+        return new JsonApiRequest($type, $id);
+    }
+
+    /**
+     * @param string $type
+     * @param string $id
+     * @return FetchRequestInterface
+     * @throws JsonApiException
+     */
+    public function fetchRequest(string $type, string $id = ''): FetchRequestInterface
+    {
+        return new FetchRequest($type, $id);
+    }
+
+    /**
+     * @param ResourceInterface $resource
+     * @param bool $patch
+     * @return SaveRequestInterface
+     * @throws JsonApiException
+     */
+    public function saveRequest(ResourceInterface $resource, bool $patch = false): SaveRequestInterface
+    {
+        return new SaveRequest(
+            $this->singleResourceDocument($resource),
+            $patch ? $resource->id() : ''
+        );
     }
 
     /**

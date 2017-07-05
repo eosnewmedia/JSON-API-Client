@@ -8,6 +8,9 @@ use Enm\JsonApi\Client\JsonApiClient;
 use Enm\JsonApi\Client\Tests\Mock\MockClient;
 use Enm\JsonApi\Model\Document\DocumentInterface;
 use Enm\JsonApi\Model\Request\FetchRequestInterface;
+use Enm\JsonApi\Model\Request\JsonApiRequestInterface;
+use Enm\JsonApi\Model\Request\SaveRequestInterface;
+use Enm\JsonApi\Model\Resource\JsonResource;
 use Enm\JsonApi\Model\Resource\Link\Link;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
@@ -118,7 +121,7 @@ class JsonApiClientTest extends TestCase
     {
         $client = new JsonApiClient('http://example.com', new MockClient(null, 204));
 
-        $response = $client->save($client->saveRequest($client->resource('test', 'abc'), 'abc'));
+        $response = $client->save($client->saveRequest($client->resource('test', 'abc'), true));
         self::assertEquals(204, $response->httpStatus());
     }
 
@@ -233,6 +236,27 @@ class JsonApiClientTest extends TestCase
         self::assertInstanceOf(
             DocumentInterface::class,
             $client->follow(new Link('test', 'http://example.com/tests'))
+        );
+    }
+
+    public function testJsonApiRequest()
+    {
+        $client = new JsonApiClient('http://example.com', new MockClient());
+        self::assertInstanceOf(JsonApiRequestInterface::class, $client->jsonApiRequest('test'));
+    }
+
+    public function testFetchRequest()
+    {
+        $client = new JsonApiClient('http://example.com', new MockClient());
+        self::assertInstanceOf(FetchRequestInterface::class, $client->fetchRequest('test'));
+    }
+
+    public function testSaveRequest()
+    {
+        $client = new JsonApiClient('http://example.com', new MockClient());
+        self::assertInstanceOf(
+            SaveRequestInterface::class,
+            $client->saveRequest(new JsonResource('test', 'test'))
         );
     }
 }
