@@ -13,7 +13,7 @@ use Enm\JsonApi\JsonApiInterface;
 use Enm\JsonApi\JsonApiTrait;
 use Enm\JsonApi\Model\Document\DocumentInterface;
 use Enm\JsonApi\Model\Request\JsonApiRequestInterface;
-use Enm\JsonApi\Model\Request\ResourceRequestInterface;
+use Enm\JsonApi\Model\Request\FetchRequestInterface;
 use Enm\JsonApi\Model\Request\SaveRequestInterface;
 use Enm\JsonApi\Model\Resource\Link\LinkInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -26,7 +26,7 @@ use Psr\Log\NullLogger;
 /**
  * @author Philipp Marien <marien@eosnewmedia.de>
  */
-class JsonApi implements LoggerAwareInterface, JsonApiInterface
+class JsonApiClient implements LoggerAwareInterface, JsonApiInterface
 {
     use LoggerAwareTrait;
     use JsonApiTrait;
@@ -52,11 +52,11 @@ class JsonApi implements LoggerAwareInterface, JsonApiInterface
     }
 
     /**
-     * @param ResourceRequestInterface $request
+     * @param FetchRequestInterface $request
      * @return DocumentInterface
      * @throws \Exception
      */
-    public function fetch(ResourceRequestInterface $request): DocumentInterface
+    public function fetch(FetchRequestInterface $request): DocumentInterface
     {
         $uri = $this->buildUri($this->buildPath($request), $this->buildQuery($request));
 
@@ -90,6 +90,10 @@ class JsonApi implements LoggerAwareInterface, JsonApiInterface
      */
     public function delete(JsonApiRequestInterface $request): DocumentInterface
     {
+        if (!$request->containsId()) {
+            throw new BadRequestException('Request does not contain a resource id!');
+        }
+
         $uri = $this->buildUri($this->buildPath($request));
 
         return $this->handleResponse(
@@ -99,14 +103,14 @@ class JsonApi implements LoggerAwareInterface, JsonApiInterface
 
     /**
      * @param string $relationship
-     * @param ResourceRequestInterface $request
+     * @param FetchRequestInterface $request
      * @param bool $onlyIdentifiers
      * @return DocumentInterface
      * @throws \Exception
      */
     public function fetchRelationship(
         string $relationship,
-        ResourceRequestInterface $request,
+        FetchRequestInterface $request,
         bool $onlyIdentifiers = false
     ): DocumentInterface {
         if (!$request->containsId()) {
@@ -169,14 +173,13 @@ class JsonApi implements LoggerAwareInterface, JsonApiInterface
      */
     protected function buildUri(string $path, array $query = []): UriInterface
     {
-        $uri = new Uri(rtrim($this->baseUrl, '/') . $path);
-        if ($uri->getQuery() !== '') {
-            $urlQuery = [];
-            parse_str($uri->getQuery(), $urlQuery);
-            $uri = $uri->withQuery(http_build_query(array_merge($urlQuery, $query)));
-        }
+        $uri = new Uri($this->baseUrl);
 
-        return $uri;
+        $urlQuery = [];
+        parse_str($uri->getQuery(), $urlQuery);
+
+        return $uri->withPath(rtrim($uri->getPath(), '/') . '/' . $path)
+            ->withQuery(http_build_query(array_merge_recursive($urlQuery, $query)));
     }
 
     /**
@@ -203,10 +206,10 @@ class JsonApi implements LoggerAwareInterface, JsonApiInterface
     }
 
     /**
-     * @param ResourceRequestInterface $request
+     * @param FetchRequestInterface $request
      * @return array
      */
-    protected function buildQuery(ResourceRequestInterface $request): array
+    protected function buildQuery(FetchRequestInterface $request): array
     {
         $query = [];
 
@@ -229,7 +232,7 @@ class JsonApi implements LoggerAwareInterface, JsonApiInterface
         if (!$request->sorting()->isEmpty()) {
             $sorting = [];
             foreach ($request->sorting()->all() as $field => $direction) {
-                $sorting[] = ($direction === ResourceRequestInterface::ORDER_DESC ? '-' : '') . $field;
+                $sorting[] = ($direction === FetchRequestInterface::ORDER_DESC ? '-' : '') . $field;
             }
             $query['sort'] = implode(',', $sorting);
         }
@@ -262,7 +265,8 @@ class JsonApi implements LoggerAwareInterface, JsonApiInterface
     protected function validateContentType(ResponseInterface $response)
     {
         $contentTypeHeader = $response->getHeader('Content-Type');
-        if (count($contentTypeHeader) === 0 || !strpos($contentTypeHeader, self::CONTENT_TYPE)) {
+
+        if (count($contentTypeHeader) === 0 || strpos($contentTypeHeader[0], self::CONTENT_TYPE) === false) {
             throw new UnsupportedMediaTypeException('Invalid content type: ' . $contentTypeHeader[0]);
         }
     }
@@ -276,11 +280,15 @@ class JsonApi implements LoggerAwareInterface, JsonApiInterface
     {
         $body = (string)$response->getBody();
         $documentData = $body !== '' ? json_decode($body, true) : [];
+
         if (!is_array($documentData)) {
             throw new JsonApiException(json_last_error_msg(), json_last_error());
         }
 
-        return $this->deserializeDocument($documentData);
+        $document = $this->deserializeDocument($documentData);
+        $document->withHttpStatus($response->getStatusCode());
+
+        return $document;
     }
 
     /**
