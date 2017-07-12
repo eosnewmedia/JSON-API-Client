@@ -35,7 +35,7 @@ class JsonApiClientTest extends TestCase
             $httpClient
         );
 
-        $response = $client->fetch($client->fetchRequest('tests', 'test-1'));
+        $response = $client->fetch($client->createFetchRequest('tests', 'test-1'));
 
         self::assertEquals(200, $response->httpStatus());
         self::assertEquals('test', $response->data()->first()->type());
@@ -64,7 +64,7 @@ class JsonApiClientTest extends TestCase
             $httpClient
         );
 
-        $client->fetch($client->fetchRequest('tests', 'test-1'));
+        $client->fetch($client->createFetchRequest('tests', 'test-1'));
     }
 
     public function testFetchResources()
@@ -72,7 +72,7 @@ class JsonApiClientTest extends TestCase
         $httpClient = new MockClient(['data' => []]);
         $client = new JsonApiClient('http://example.com', $httpClient);
 
-        self::assertTrue($client->fetch($client->fetchRequest('tests'))->shouldBeHandledAsCollection());
+        self::assertTrue($client->fetch($client->createFetchRequest('tests'))->shouldBeHandledAsCollection());
         self::assertEquals((string)$httpClient->getUri(), 'http://example.com/tests');
     }
 
@@ -83,7 +83,7 @@ class JsonApiClientTest extends TestCase
         self::assertTrue(
             $client->fetchRelationship(
                 'examples',
-                $client->fetchRequest('test', 'test-1')
+                $client->createFetchRequest('test', 'test-1')
             )->shouldBeHandledAsCollection()
         );
     }
@@ -95,7 +95,7 @@ class JsonApiClientTest extends TestCase
     {
         $client = new JsonApiClient('http://example.com', new MockClient([]));
 
-        $client->fetchRelationship('examples', $client->fetchRequest('test'));
+        $client->fetchRelationship('examples', $client->createFetchRequest('test'));
     }
 
     /**
@@ -106,14 +106,14 @@ class JsonApiClientTest extends TestCase
         /** @var HttpClientInterface $httpClient */
         $httpClient = $this->createMock(HttpClientInterface::class);
         $client = new JsonApiClient('http://example.com', $httpClient);
-        $client->fetch($client->fetchRequest('tests', 'test-1'));
+        $client->fetch($client->createFetchRequest('tests', 'test-1'));
     }
 
     public function testCreate()
     {
         $client = new JsonApiClient('http://example.com', new MockClient(null, 204));
 
-        $response = $client->save($client->saveRequest($client->resource('test', '')));
+        $response = $client->save($client->createSaveRequest($client->resource('test', '')));
         self::assertEquals(204, $response->httpStatus());
     }
 
@@ -121,7 +121,7 @@ class JsonApiClientTest extends TestCase
     {
         $client = new JsonApiClient('http://example.com', new MockClient(null, 204));
 
-        $response = $client->save($client->saveRequest($client->resource('test', 'abc'), true));
+        $response = $client->save($client->createSaveRequest($client->resource('test', 'abc'), true));
         self::assertEquals(204, $response->httpStatus());
     }
 
@@ -129,7 +129,7 @@ class JsonApiClientTest extends TestCase
     {
         $client = new JsonApiClient('http://example.com', new MockClient(null, 204));
 
-        $response = $client->delete($client->jsonApiRequest('test', 'test-1'));
+        $response = $client->delete($client->createJsonApiRequest('test', 'test-1'));
         self::assertEquals(204, $response->httpStatus());
     }
 
@@ -139,7 +139,7 @@ class JsonApiClientTest extends TestCase
     public function testDeleteWithoutId()
     {
         $client = new JsonApiClient('http://example.com', new MockClient());
-        $client->delete($client->jsonApiRequest('test'));
+        $client->delete($client->createJsonApiRequest('test'));
     }
 
     public function testFetchWithQuery()
@@ -149,7 +149,7 @@ class JsonApiClientTest extends TestCase
             'http://example.com?filter[status]=new',
             $httpClient
         );
-        $request = $client->fetchRequest('tests', 'test-1');
+        $request = $client->createFetchRequest('tests', 'test-1');
         $request->filter()->set('test', 'example');
         $request->include('example');
         $request->include('example.abc');
@@ -201,7 +201,7 @@ class JsonApiClientTest extends TestCase
 
         $client = new JsonApiClient('http://example.com', $httpClient);
 
-        $client->fetch($client->fetchRequest('tests', 'test-1'));
+        $client->fetch($client->createFetchRequest('tests', 'test-1'));
     }
 
     /**
@@ -227,7 +227,7 @@ class JsonApiClientTest extends TestCase
 
         $client = new JsonApiClient('http://example.com', $httpClient);
 
-        $client->fetch($client->fetchRequest('tests', 'test-1'));
+        $client->fetch($client->createFetchRequest('tests', 'test-1'));
     }
 
     public function testFollow()
@@ -242,13 +242,13 @@ class JsonApiClientTest extends TestCase
     public function testJsonApiRequest()
     {
         $client = new JsonApiClient('http://example.com', new MockClient());
-        self::assertInstanceOf(JsonApiRequestInterface::class, $client->jsonApiRequest('test'));
+        self::assertInstanceOf(JsonApiRequestInterface::class, $client->createJsonApiRequest('test'));
     }
 
     public function testFetchRequest()
     {
         $client = new JsonApiClient('http://example.com', new MockClient());
-        self::assertInstanceOf(FetchRequestInterface::class, $client->fetchRequest('test'));
+        self::assertInstanceOf(FetchRequestInterface::class, $client->createFetchRequest('test'));
     }
 
     public function testSaveRequest()
@@ -256,7 +256,7 @@ class JsonApiClientTest extends TestCase
         $client = new JsonApiClient('http://example.com', new MockClient());
         self::assertInstanceOf(
             SaveRequestInterface::class,
-            $client->saveRequest(new JsonResource('test', 'test'))
+            $client->createSaveRequest(new JsonResource('test', 'test'))
         );
     }
 }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Enm\JsonApi\Client;
 
 use Enm\JsonApi\Client\HttpClient\HttpClientInterface;
-use Enm\JsonApi\Client\Model\Request\Uri;
+use GuzzleHttp\Psr7\Uri;
 use Enm\JsonApi\Exception\BadRequestException;
 use Enm\JsonApi\Exception\HttpException;
 use Enm\JsonApi\Exception\JsonApiException;
@@ -56,34 +56,40 @@ class JsonApiClient implements LoggerAwareInterface, JsonApiInterface
     }
 
     /**
+     * Create a simple json api request which is currently used for delete requests
+     *
      * @param string $type
      * @param string $id
      * @return JsonApiRequestInterface
      * @throws JsonApiException
      */
-    public function jsonApiRequest(string $type, string $id = ''): JsonApiRequestInterface
+    public function createJsonApiRequest(string $type, string $id = ''): JsonApiRequestInterface
     {
         return new JsonApiRequest($type, $id);
     }
 
     /**
+     * Create a fetch request to retrieve one (type and id given) or many (only type given) resources from server
+     *
      * @param string $type
      * @param string $id
      * @return FetchRequestInterface
      * @throws JsonApiException
      */
-    public function fetchRequest(string $type, string $id = ''): FetchRequestInterface
+    public function createFetchRequest(string $type, string $id = ''): FetchRequestInterface
     {
         return new FetchRequest($type, $id);
     }
 
     /**
+     * Create a request to create or update a given resource object on server side
+     *
      * @param ResourceInterface $resource
      * @param bool $patch
      * @return SaveRequestInterface
      * @throws JsonApiException
      */
-    public function saveRequest(ResourceInterface $resource, bool $patch = false): SaveRequestInterface
+    public function createSaveRequest(ResourceInterface $resource, bool $patch = false): SaveRequestInterface
     {
         return new SaveRequest(
             $this->singleResourceDocument($resource),
@@ -218,7 +224,7 @@ class JsonApiClient implements LoggerAwareInterface, JsonApiInterface
         $urlQuery = [];
         parse_str($uri->getQuery(), $urlQuery);
 
-        return $uri->withPath(rtrim($uri->getPath(), '/') . '/' . $path)
+        return $uri->withPath(rtrim($uri->getPath(), '/') . '/' . ltrim($path, '/'))
             ->withQuery(http_build_query(array_merge_recursive($urlQuery, $query)));
     }
 
