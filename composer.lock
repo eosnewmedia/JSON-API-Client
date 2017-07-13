@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/eosnewmedia/JSON-API-Common.git",
-                "reference": "b9a9c1d60597f80ccc4284ae4b6a870f4ef9bf9e"
+                "reference": "269f2b8c13bef8f8fb8b9b066c0aa9ba0df1b02f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/eosnewmedia/JSON-API-Common/zipball/b9a9c1d60597f80ccc4284ae4b6a870f4ef9bf9e",
-                "reference": "b9a9c1d60597f80ccc4284ae4b6a870f4ef9bf9e",
+                "url": "https://api.github.com/repos/eosnewmedia/JSON-API-Common/zipball/269f2b8c13bef8f8fb8b9b066c0aa9ba0df1b02f",
+                "reference": "269f2b8c13bef8f8fb8b9b066c0aa9ba0df1b02f",
                 "shasum": ""
             },
             "require": {
@@ -47,7 +47,7 @@
                 }
             ],
             "description": "Basic php implementation (shared structures for client and server) of the json api specification (jsonapi.org)",
-            "time": "2017-07-13 12:23:38"
+            "time": "2017-07-13 16:11:58"
         },
         {
             "name": "guzzlehttp/psr7",
