@@ -2,37 +2,41 @@ JSON API Client
 ===============
 [![Build Status](https://travis-ci.org/eosnewmedia/JSON-API-Client.svg?branch=master)](https://travis-ci.org/eosnewmedia/JSON-API-Client) [![SensioLabsInsight](https://insight.sensiolabs.com/projects/d6c28b22-fa18-4a74-8204-0e91d205781a/mini.png)](https://insight.sensiolabs.com/projects/d6c28b22-fa18-4a74-8204-0e91d205781a)
 
-Abstract client-side php implementation of the [json api specification](http://jsonapi.org/format/), based on the [PSR-7 HTTP message interface](http://www.php-fig.org/psr/psr-7/).
+Abstract client-side PHP implementation of the [json api specification](http://jsonapi.org/format/), based on the [PSR-7 HTTP message interface](http://www.php-fig.org/psr/psr-7/).
 
 ## Installation
 
-    composer require enm/json-api-client
+```sh
+composer require enm/json-api-client
+```
 
 ## Documentation
 First you should read the docs at [enm/json-api-common](https://eosnewmedia.github.io/JSON-API-Common/) where all basic structures are defined.
 
-Your api client for sending requests to a json api and get validated responses as json api documents is an instance of
-`Enm\JsonApi\Client\JsonApiClient`, which requires a http client (`Enm\JsonApi\HttpClient\HttpClientInterface`) to execute
+Your API client for sending requests to a JSON API and get validated responses as JSON API documents is an instance of
+`Enm\JsonApi\Client\JsonApiClient`, which requires a HTTP client (`Enm\JsonApi\HttpClient\HttpClientInterface`) to execute
 requests.
 
-You can use the default http implementation (`Enm\JsonApi\HttpClient\GuzzleAdapter`) which requires a guzzle client.
+You can use the default HTTP implementation (`Enm\JsonApi\HttpClient\GuzzleAdapter`) which requires a Guzzle client.
 
-    composer require guzzlehttp/guzzle ^6.0
+```sh
+composer require guzzlehttp/guzzle ^6.0
+```
 
-If needed you can also implement the interface by yourself to use any http client which supports psr7.
+If needed you can also implement the interface by yourself to use any HTTP client which supports PSR-7.
 
 ### Usage
 
 | Method                                                                                                 | Return Type             | Description                                                                                                                    |
 |--------------------------------------------------------------------------------------------------------|-------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| createJsonApiRequest(string $type, string $id = '')                                                    | JsonApiRequestInterface | Create a new json api request object, needed for a delete request.                                                             |
+| createJsonApiRequest(string $type, string $id = '')                                                    | JsonApiRequestInterface | Create a new JSON API request object, needed for a delete request.                                                             |
 | createFetchRequest(string $type, string $id = '')                                                      | FetchRequestInterface   | Create a new fetch request object, needed for fetch requests.                                                                  |
 | createSaveRequest(ResourceInterface $resource, bool $patch = false)                                    | SaveRequestInterface    | Create a new save request object, needed for create or patch requests.                                                         |
-| fetch(FetchRequestInterface $request)                                                                  | DocumentInterface       | Execute a fetch request for one or many resources and transform the server response into a json api document.                  |
-| save(SaveRequestInterface $request)                                                                    | DocumentInterface       | Execute a save (create or patch) request and transform the server response into a json api document.                           |
-| delete(JsonApiRequestInterface $request)                                                               | DocumentInterface       | Execute a delete request and transform the server response into a json api document.                                           |
-| fetchRelationship(string $relationship, FetchRequestInterface $request, bool $onlyIdentifiers = false) | DocumentInterface       | Execute a fetch request for a relationship and transform the server response into a json api document.                         |
-| follow(LinkInterface $link, array $headers = [])                                                       | DocumentInterface       | Execute a fetch request which is defined by a json api link object and transform the server response into a json api document. |
+| fetch(FetchRequestInterface $request)                                                                  | DocumentInterface       | Execute a fetch request for one or many resources and transform the server response into a JSON API document.                  |
+| save(SaveRequestInterface $request)                                                                    | DocumentInterface       | Execute a save (create or patch) request and transform the server response into a JSON API document.                           |
+| delete(JsonApiRequestInterface $request)                                                               | DocumentInterface       | Execute a delete request and transform the server response into a JSON API document.                                           |
+| fetchRelationship(string $relationship, FetchRequestInterface $request, bool $onlyIdentifiers = false) | DocumentInterface       | Execute a fetch request for a relationship and transform the server response into a JSON API document.                         |
+| follow(LinkInterface $link, array $headers = [])                                                       | DocumentInterface       | Execute a fetch request which is defined by a JSON API link object and transform the server response into a JSON API document. |
 
 
 ```php 
