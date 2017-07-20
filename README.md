@@ -10,13 +10,6 @@ Abstract client-side PHP implementation of the [json api specification](http://j
 composer require enm/json-api-client
 ```
 
-## Documentation
-First you should read the docs at [enm/json-api-common](https://eosnewmedia.github.io/JSON-API-Common/) where all basic structures are defined.
-
-Your API client for sending requests to a JSON API and get validated responses as JSON API documents is an instance of
-`Enm\JsonApi\Client\JsonApiClient`, which requires a HTTP client (`Enm\JsonApi\HttpClient\HttpClientInterface`) to execute
-requests.
-
 You can use the default HTTP implementation (`Enm\JsonApi\HttpClient\GuzzleAdapter`) which requires a Guzzle client.
 
 ```sh
@@ -25,7 +18,12 @@ composer require guzzlehttp/guzzle ^6.0
 
 If needed you can also implement the interface by yourself to use any HTTP client which supports PSR-7.
 
-### Usage
+## Usage
+First you should read the docs at [enm/json-api-common](https://eosnewmedia.github.io/JSON-API-Common/) where all basic structures are defined.
+
+Your API client for sending requests to a JSON API and get validated responses as JSON API documents is an instance of
+`Enm\JsonApi\Client\JsonApiClient`, which requires a HTTP client (`Enm\JsonApi\HttpClient\HttpClientInterface`) to execute
+requests.
 
 | Method                                                                                                 | Return Type             | Description                                                                                                                    |
 |--------------------------------------------------------------------------------------------------------|-------------------------|--------------------------------------------------------------------------------------------------------------------------------|
