@@ -113,7 +113,7 @@ class JsonApiClientTest extends TestCase
     {
         $client = new JsonApiClient('http://example.com', new MockClient(null, 204));
 
-        $response = $client->save($client->createSaveRequest($client->resource('test', '')));
+        $response = $client->save($client->createSaveSingleResourceRequest($client->resource('test', '')));
         self::assertEquals(204, $response->httpStatus());
     }
 
@@ -121,7 +121,7 @@ class JsonApiClientTest extends TestCase
     {
         $client = new JsonApiClient('http://example.com', new MockClient(null, 204));
 
-        $response = $client->save($client->createSaveRequest($client->resource('test', 'abc'), true));
+        $response = $client->save($client->createSaveSingleResourceRequest($client->resource('test', 'abc'), true));
         self::assertEquals(204, $response->httpStatus());
     }
 
@@ -256,7 +256,7 @@ class JsonApiClientTest extends TestCase
         $client = new JsonApiClient('http://example.com', new MockClient());
         self::assertInstanceOf(
             SaveRequestInterface::class,
-            $client->createSaveRequest(new JsonResource('test', 'test'))
+            $client->createSaveSingleResourceRequest(new JsonResource('test', 'test'))
         );
     }
 }

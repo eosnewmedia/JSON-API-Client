@@ -89,7 +89,7 @@ class JsonApiClient implements LoggerAwareInterface, JsonApiInterface
      * @return SaveRequestInterface
      * @throws JsonApiException
      */
-    public function createSaveRequest(ResourceInterface $resource, bool $patch = false): SaveRequestInterface
+    public function createSaveSingleResourceRequest(ResourceInterface $resource, bool $patch = false): SaveRequestInterface
     {
         return new SaveSingleResourceRequest(
             $this->singleResourceDocument($resource),
