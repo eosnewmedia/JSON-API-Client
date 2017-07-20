@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Enm\JsonApi\Client;
 
 use Enm\JsonApi\Client\HttpClient\HttpClientInterface;
+use Enm\JsonApi\Model\Request\SaveSingleResourceRequest;
 use GuzzleHttp\Psr7\Uri;
 use Enm\JsonApi\Exception\BadRequestException;
 use Enm\JsonApi\Exception\HttpException;
@@ -16,7 +17,6 @@ use Enm\JsonApi\Model\Request\FetchRequest;
 use Enm\JsonApi\Model\Request\JsonApiRequest;
 use Enm\JsonApi\Model\Request\JsonApiRequestInterface;
 use Enm\JsonApi\Model\Request\FetchRequestInterface;
-use Enm\JsonApi\Model\Request\SaveRequest;
 use Enm\JsonApi\Model\Request\SaveRequestInterface;
 use Enm\JsonApi\Model\Resource\Link\LinkInterface;
 use Enm\JsonApi\Model\Resource\ResourceInterface;
@@ -91,7 +91,7 @@ class JsonApiClient implements LoggerAwareInterface, JsonApiInterface
      */
     public function createSaveRequest(ResourceInterface $resource, bool $patch = false): SaveRequestInterface
     {
-        return new SaveRequest(
+        return new SaveSingleResourceRequest(
             $this->singleResourceDocument($resource),
             $patch ? $resource->id() : ''
         );
