@@ -65,4 +65,20 @@ $requestAll =  $apiClient->createFetchRequest('myResourceType');
 // get a response from server
 $collectionDocument = $apiClient->fetch($request);
 $resources = $collectionDocument->data()->all(); // all resources from the current response
+
+##############
+
+// create a new resource
+$resource = $apiClient->resource('examples', 'example-1');
+
+$request = $apiClient->createSaveSingleResourceRequest($resource);
+$response = $apiClient->save($request);
+
+// update the created resource
+$resource = $response->data()->first(); // get the created resource from response
+$resource->attributes()->set('title', 'Example');
+
+$request = $apiClient->createSaveSingleResourceRequest($resource);
+$response = $apiClient->save($request);
+
 ```
