@@ -187,7 +187,7 @@ class JsonApiClient implements LoggerAwareInterface, JsonApiInterface
         }
 
         return $this->handleResponse(
-            $this->httpClient()->get($this->buildUri($link->href()), $headers)
+            $this->httpClient()->get(new Uri($link->href()), $headers)
         );
     }
 
