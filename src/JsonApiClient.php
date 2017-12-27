@@ -364,7 +364,7 @@ class JsonApiClient implements LoggerAwareInterface, JsonApiInterface
      */
     protected function handleCriticalErrors(ResponseInterface $response, DocumentInterface $document)
     {
-        if (!in_array($response->getStatusCode(), [200, 202, 204], true)) {
+        if (!in_array($response->getStatusCode(), [200, 201, 202, 204], true)) {
             $this->logger()->critical(
                 (string)$response->getReasonPhrase(),
                 [
