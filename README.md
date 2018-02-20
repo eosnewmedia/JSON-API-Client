@@ -10,10 +10,16 @@ Abstract client-side PHP implementation of the [json api specification](http://j
 composer require enm/json-api-client
 ```
 
-You can use the default HTTP implementation (`Enm\JsonApi\HttpClient\GuzzleAdapter`) which requires a Guzzle client.
+You can use the default HTTP implementation (`Enm\JsonApi\HttpClient\GuzzleAdapter`) which requires the Guzzle client.
 
 ```sh
 composer require guzzlehttp/guzzle ^6.0
+```
+
+or the BuzzCurlAdapter (`Enm\JsonApi\HttpClient\BuzzCurlAdapter`) which requires the `kriswallsmith/buzz` client.
+
+```sh
+composer require kriswallsmith/buzz ^0.16
 ```
 
 If needed you can also implement the interface by yourself to use any HTTP client which supports PSR-7.

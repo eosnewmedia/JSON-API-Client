@@ -89,8 +89,10 @@ class JsonApiClient implements LoggerAwareInterface, JsonApiInterface
      * @return SaveRequestInterface
      * @throws JsonApiException
      */
-    public function createSaveSingleResourceRequest(ResourceInterface $resource, bool $patch = false): SaveRequestInterface
-    {
+    public function createSaveSingleResourceRequest(
+        ResourceInterface $resource,
+        bool $patch = false
+    ): SaveRequestInterface {
         return new SaveSingleResourceRequest(
             $this->singleResourceDocument($resource),
             $patch ? $resource->id() : ''
@@ -312,7 +314,11 @@ class JsonApiClient implements LoggerAwareInterface, JsonApiInterface
     {
         $contentTypeHeader = $response->getHeader('Content-Type');
 
-        if (count($contentTypeHeader) === 0 || strpos($contentTypeHeader[0], self::CONTENT_TYPE) === false) {
+        if (
+            !\is_array($contentTypeHeader)
+            || \count($contentTypeHeader) === 0
+            || strpos($contentTypeHeader[0], self::CONTENT_TYPE) === false
+        ) {
             throw new UnsupportedMediaTypeException('Invalid content type: ' . $contentTypeHeader[0]);
         }
     }
