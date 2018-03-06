@@ -115,20 +115,30 @@ class JsonApiClient implements LoggerAwareInterface, JsonApiInterface
 
     /**
      * @param SaveRequestInterface $request
+     * @param bool $forceCreate Set too true if you want to force a post request
+     *
      * @return DocumentInterface
      * @throws \Exception
      */
-    public function save(SaveRequestInterface $request): DocumentInterface
+    public function save(SaveRequestInterface $request, $forceCreate = false): DocumentInterface
     {
         $uri = $this->buildUri($this->buildPath($request));
 
-        return $this->handleResponse(
-            $this->httpClient()->post(
+        if (!$request->containsId() || $forceCreate) {
+            $response = $this->httpClient()->post(
                 $uri,
                 $this->buildRequestContent($request->document()),
                 $request->headers()->all()
-            )
-        );
+            );
+        } else {
+            $response = $this->httpClient()->patch(
+                $uri,
+                $this->buildRequestContent($request->document()),
+                $request->headers()->all()
+            );
+        }
+
+        return $this->handleResponse($response);
     }
 
     /**
