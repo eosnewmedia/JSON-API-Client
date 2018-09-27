@@ -4,9 +4,11 @@ declare(strict_types=1);
 namespace Enm\JsonApi\Client\HttpClient;
 
 use Buzz\Client\Curl;
+use Enm\JsonApi\Client\HttpClient\Response\HttpResponse;
+use Enm\JsonApi\Client\JsonApiClient;
+use Enm\JsonApi\Model\Request\RequestInterface;
+use Enm\JsonApi\Model\Response\ResponseInterface;
 use GuzzleHttp\Psr7\Request;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\UriInterface;
 
 /**
  * @author Philipp Marien <marien@eosnewmedia.de>
@@ -27,44 +29,28 @@ class BuzzCurlAdapter implements HttpClientInterface
     }
 
     /**
-     * @param UriInterface $uri
-     * @param array $headers
+     * @param RequestInterface $request
+     * @param JsonApiClient $handler
      * @return ResponseInterface
      */
-    public function get(UriInterface $uri, array $headers = []): ResponseInterface
+    public function execute(RequestInterface $request, JsonApiClient $handler): ResponseInterface
     {
-        return $this->client->sendRequest(new Request('GET', $uri, $headers));
-    }
+        $response = $this->client->sendRequest(
+            new Request(
+                $request->method(),
+                $request->uri(),
+                $request->headers()->all(),
+                $handler->createRequestBody($request->requestBody())
+            ),
+            [
+                'http_errors' => false
+            ]
+        );
 
-    /**
-     * @param UriInterface $uri
-     * @param string $content
-     * @param array $headers
-     * @return ResponseInterface
-     */
-    public function post(UriInterface $uri, string $content, array $headers = []): ResponseInterface
-    {
-        return $this->client->sendRequest(new Request('POST', $uri, $headers, $content));
-    }
-
-    /**
-     * @param UriInterface $uri
-     * @param string $content
-     * @param array $headers
-     * @return ResponseInterface
-     */
-    public function patch(UriInterface $uri, string $content, array $headers = []): ResponseInterface
-    {
-        return $this->client->sendRequest(new Request('PATCH', $uri, $headers, $content));
-    }
-
-    /**
-     * @param UriInterface $uri
-     * @param array $headers
-     * @return ResponseInterface
-     */
-    public function delete(UriInterface $uri, array $headers = []): ResponseInterface
-    {
-        return $this->client->sendRequest(new Request('DELETE', $uri, $headers));
+        return new HttpResponse(
+            $response->getStatusCode(),
+            $response->getHeaders(),
+            $handler->createResponseBody((string)$response->getBody())
+        );
     }
 }
