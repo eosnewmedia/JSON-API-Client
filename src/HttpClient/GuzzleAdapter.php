@@ -3,10 +3,12 @@ declare(strict_types=1);
 
 namespace Enm\JsonApi\Client\HttpClient;
 
+use Enm\JsonApi\Client\HttpClient\Response\HttpResponse;
+use Enm\JsonApi\Client\JsonApiClient;
+use Enm\JsonApi\Model\Request\RequestInterface;
+use Enm\JsonApi\Model\Response\ResponseInterface;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Psr7\Request;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\UriInterface;
 
 /**
  * @author Philipp Marien <marien@eosnewmedia.de>
@@ -16,75 +18,40 @@ class GuzzleAdapter implements HttpClientInterface
     /**
      * @var ClientInterface
      */
-    private $guzzleClient;
+    private $client;
 
     /**
-     * @param ClientInterface $guzzleClient
+     * @param ClientInterface $client
      */
-    public function __construct(ClientInterface $guzzleClient)
+    public function __construct(ClientInterface $client)
     {
-        $this->guzzleClient = $guzzleClient;
+        $this->client = $client;
     }
 
     /**
-     * @return ClientInterface
-     */
-    protected function guzzleClient(): ClientInterface
-    {
-        return $this->guzzleClient;
-    }
-
-    /**
-     * @param UriInterface $uri
-     * @param array $headers
+     * @param RequestInterface $request
+     * @param JsonApiClient $handler
      * @return ResponseInterface
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    public function get(UriInterface $uri, array $headers = []): ResponseInterface
+    public function execute(RequestInterface $request, JsonApiClient $handler): ResponseInterface
     {
-        return $this->guzzleClient()->send(
-            new Request('GET', $uri, $headers), ['http_errors' => false]
+        $response = $this->client->send(
+            new Request(
+                $request->method(),
+                $request->uri(),
+                $request->headers()->all(),
+                $handler->createRequestBody($request->requestBody())
+            ),
+            [
+                'http_errors' => false
+            ]
         );
-    }
 
-    /**
-     * @param UriInterface $uri
-     * @param string $content
-     * @param array $headers
-     * @return ResponseInterface
-     * @throws \GuzzleHttp\Exception\GuzzleException
-     */
-    public function post(UriInterface $uri, string $content, array $headers = []): ResponseInterface
-    {
-        return $this->guzzleClient()->send(
-            new Request('POST', $uri, $headers, $content), ['http_errors' => false]
-        );
-    }
-
-    /**
-     * @param UriInterface $uri
-     * @param string $content
-     * @param array $headers
-     * @return ResponseInterface
-     * @throws \GuzzleHttp\Exception\GuzzleException
-     */
-    public function patch(UriInterface $uri, string $content, array $headers = []): ResponseInterface
-    {
-        return $this->guzzleClient()->send(
-            new Request('PATCH', $uri, $headers, $content), ['http_errors' => false]
-        );
-    }
-
-    /**
-     * @param UriInterface $uri
-     * @param array $headers
-     * @return ResponseInterface
-     * @throws \GuzzleHttp\Exception\GuzzleException
-     */
-    public function delete(UriInterface $uri, array $headers = []): ResponseInterface
-    {
-        return $this->guzzleClient()->send(
-            new Request('DELETE', $uri, $headers), ['http_errors' => false]
+        return new HttpResponse(
+            $response->getStatusCode(),
+            $response->getHeaders(),
+            $handler->createResponseBody((string)$response->getBody())
         );
     }
 }

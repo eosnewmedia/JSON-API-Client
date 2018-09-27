@@ -20,13 +20,10 @@
     }
   },
   "require": {
-    "enm/json-api-common": "^2.0",
-    "psr/http-message": "^1.0",
-    "psr/log": "^1.0",
-    "guzzlehttp/psr7": "^1.0"
+    "enm/json-api-common": "^3.0"
   },
   "require-dev": {
-    "phpunit/phpunit": "^6.2",
+    "phpunit/phpunit": "^7.0",
     "guzzlehttp/guzzle": "^6.0",
     "kriswallsmith/buzz": "^0.16.0"
   },
