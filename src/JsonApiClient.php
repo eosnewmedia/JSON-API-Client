@@ -180,9 +180,12 @@ class JsonApiClient
         $prefix = null;
         if (array_key_exists('path', $url)) {
             $prefix = trim($url['path'], '/');
+            if (!empty($prefix)) {
+                $prefix .= '/';
+            }
         }
 
-        $requestUri = $requestUri->withPath($prefix . '/' . trim($requestUri->getPath(), '/'));
+        $requestUri = $requestUri->withPath('/' . $prefix . trim($requestUri->getPath(), '/'));
 
         return new Request($method, $requestUri, $body, $prefix);
     }
