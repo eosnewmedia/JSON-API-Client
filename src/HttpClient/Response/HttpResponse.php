@@ -38,7 +38,7 @@ class HttpResponse implements ResponseInterface
         $this->status = $status;
         $this->headers = new KeyValueCollection();
         foreach ($headers as $header => $value) {
-            if (\is_array($value) && \count($value) === 1) {
+            if (is_array($value) && count($value) === 1) {
                 $value = $value[0];
             }
             $this->headers->set($header, $value);

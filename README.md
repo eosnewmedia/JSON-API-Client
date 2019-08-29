@@ -10,30 +10,27 @@ Abstract client-side PHP implementation of the [json api specification](http://j
 composer require enm/json-api-client
 ```
 
-You can use the default HTTP implementation (`Enm\JsonApi\HttpClient\GuzzleAdapter`) which requires the Guzzle client.
+It's recommended to install `kriswallsmith/buzz` as http-client and `nyholm/psr7` for http factories.
 
 ```sh
-composer require guzzlehttp/guzzle ^6.0
+composer require kriswallsmith/buzz nyholm/psr7
 ```
 
-or the BuzzCurlAdapter (`Enm\JsonApi\HttpClient\BuzzCurlAdapter`) which requires the `kriswallsmith/buzz` client.
-
-```sh
-composer require kriswallsmith/buzz ^0.16
-```
-
-If needed you can also implement the interface by yourself to use any HTTP client which supports PSR-7.
+You can also use any HTTP client which implements [PSR-18](https://www.php-fig.org/psr/psr-18/).
 
 ## Usage
 First you should read the docs at [enm/json-api-common](https://eosnewmedia.github.io/JSON-API-Common/) where all basic structures are defined.
 
-Your API client is an instance of `Enm\JsonApi\Client\JsonApiClient`, which requires a HTTP client (`Enm\JsonApi\HttpClient\HttpClientInterface`) to execute requests.
+Your API client is an instance of `Enm\JsonApi\Client\JsonApiClient`, which requires a PSR-18 HTTP client (`Psr\Http\Client\ClientInterface`) to execute requests.
 
 ```php 
 
 $client = new JsonApiClient(
     'http://example.com/api',
-    new GuzzleAdapter(new Client()), // with guzzle in this example...
+    $httpClient, // instance of Psr\Http\Client\ClientInterface
+    $uriFactory, // instance of Psr\Http\Message\UriFactoryInterface
+    $requestFactory, // instance of Psr\Http\Message\RequestFactoryInterface
+    $streamFactory, // instance of Psr\Http\Message\StreamFactoryInterface
     new Serializer(),
     new Deserializer()
 );

@@ -3,16 +3,20 @@ declare(strict_types=1);
 
 namespace Enm\JsonApi\Client;
 
-use Enm\JsonApi\Client\HttpClient\HttpClientInterface;
+use Enm\JsonApi\Client\HttpClient\Response\HttpResponse;
 use Enm\JsonApi\Exception\HttpException;
-use Enm\JsonApi\Exception\JsonApiException;
 use Enm\JsonApi\Model\Document\DocumentInterface;
 use Enm\JsonApi\Model\Request\Request;
 use Enm\JsonApi\Model\Request\RequestInterface;
 use Enm\JsonApi\Model\Response\ResponseInterface;
 use Enm\JsonApi\Serializer\DocumentDeserializerInterface;
 use Enm\JsonApi\Serializer\DocumentSerializerInterface;
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestFactoryInterface;
+use Psr\Http\Message\StreamFactoryInterface;
+use Psr\Http\Message\UriFactoryInterface;
 use Psr\Http\Message\UriInterface;
+use Throwable;
 
 /**
  * @author Philipp Marien <marien@eosnewmedia.de>
@@ -23,10 +27,26 @@ class JsonApiClient
      * @var string
      */
     private $baseUrl;
+
     /**
-     * @var HttpClientInterface
+     * @var ClientInterface
      */
     private $httpClient;
+
+    /**
+     * @var UriFactoryInterface
+     */
+    private $uriFactory;
+
+    /**
+     * @var RequestFactoryInterface
+     */
+    private $requestFactory;
+
+    /**
+     * @var StreamFactoryInterface
+     */
+    private $streamFactory;
 
     /**
      * @var DocumentSerializerInterface
@@ -39,19 +59,28 @@ class JsonApiClient
     private $deserializer;
 
     /**
-     * @param string $baseUri
-     * @param HttpClientInterface $httpClient
+     * @param string $baseUrl
+     * @param ClientInterface $httpClient
+     * @param UriFactoryInterface $uriFactory
+     * @param RequestFactoryInterface $requestFactory
+     * @param StreamFactoryInterface $streamFactory
      * @param DocumentSerializerInterface $serializer
      * @param DocumentDeserializerInterface $deserializer
      */
     public function __construct(
-        string $baseUri,
-        HttpClientInterface $httpClient,
+        string $baseUrl,
+        ClientInterface $httpClient,
+        UriFactoryInterface $uriFactory,
+        RequestFactoryInterface $requestFactory,
+        StreamFactoryInterface $streamFactory,
         DocumentSerializerInterface $serializer,
         DocumentDeserializerInterface $deserializer
     ) {
-        $this->baseUrl = $baseUri;
+        $this->baseUrl = $baseUrl;
         $this->httpClient = $httpClient;
+        $this->uriFactory = $uriFactory;
+        $this->requestFactory = $requestFactory;
+        $this->streamFactory = $streamFactory;
         $this->serializer = $serializer;
         $this->deserializer = $deserializer;
     }
@@ -59,55 +88,70 @@ class JsonApiClient
     /**
      * @param UriInterface $path
      * @return RequestInterface
-     * @throws \Enm\JsonApi\Exception\BadRequestException
+     * @throws Throwable
      */
     public function createGetRequest(UriInterface $path): RequestInterface
     {
-        return $this->createRequest('GET', $path);
+        return $this->createJsonApiRequest('GET', $path);
     }
 
     /**
      * @param UriInterface $path
      * @param DocumentInterface $body
      * @return RequestInterface
-     * @throws \Enm\JsonApi\Exception\BadRequestException
+     * @throws Throwable
      */
     public function createPostRequest(UriInterface $path, DocumentInterface $body): RequestInterface
     {
-        return $this->createRequest('POST', $path, $body);
+        return $this->createJsonApiRequest('POST', $path, $body);
     }
 
     /**
      * @param UriInterface $path
      * @param DocumentInterface $body
      * @return RequestInterface
-     * @throws \Enm\JsonApi\Exception\BadRequestException
+     * @throws Throwable
      */
     public function createPatchRequest(UriInterface $path, DocumentInterface $body): RequestInterface
     {
-        return $this->createRequest('PATCH', $path, $body);
+        return $this->createJsonApiRequest('PATCH', $path, $body);
     }
 
     /**
      * @param UriInterface $path
      * @param DocumentInterface|null $body
      * @return RequestInterface
-     * @throws \Enm\JsonApi\Exception\BadRequestException
+     * @throws Throwable
      */
     public function createDeleteRequest(UriInterface $path, ?DocumentInterface $body = null): RequestInterface
     {
-        return $this->createRequest('DELETE', $path, $body);
+        return $this->createJsonApiRequest('DELETE', $path, $body);
     }
 
     /**
      * @param RequestInterface $request
      * @param bool $exceptionOnFatalError
      * @return ResponseInterface
-     * @throws JsonApiException
+     * @throws Throwable
      */
     public function execute(RequestInterface $request, bool $exceptionOnFatalError = true): ResponseInterface
     {
-        $response = $this->httpClient->execute($request, $this);
+        $httpRequest = $this->requestFactory->createRequest($request->method(), $request->uri());
+        if ($request->requestBody()) {
+            $httpRequest->withBody(
+                $this->streamFactory->createStream(
+                    json_encode($this->serializer->serializeDocument($request->requestBody()))
+                )
+            );
+        }
+
+        $httpResponse = $this->httpClient->sendRequest($httpRequest);
+
+        $response = new HttpResponse(
+            $httpResponse->getStatusCode(),
+            $httpResponse->getHeaders(),
+            $this->createResponseBody($httpResponse->getBody()->getContents())
+        );
 
         if ($exceptionOnFatalError && $response->status() >= 400) {
             $message = 'Non successful http status returned (' . $response->status() . ').';
@@ -126,19 +170,10 @@ class JsonApiClient
     }
 
     /**
-     * @param DocumentInterface|null $requestBody
-     * @return string|null
-     */
-    public function createRequestBody(?DocumentInterface $requestBody): ?string
-    {
-        return $requestBody ? json_encode($this->serializer->serializeDocument($requestBody)) : null;
-    }
-
-    /**
      * @param string|null $responseBody
      * @return DocumentInterface|null
      */
-    public function createResponseBody(?string $responseBody): ?DocumentInterface
+    private function createResponseBody(?string $responseBody): ?DocumentInterface
     {
         $responseBody = (string)$responseBody !== '' ? json_decode($responseBody, true) : null;
 
@@ -150,43 +185,54 @@ class JsonApiClient
      * @param UriInterface $path
      * @param DocumentInterface|null $body
      * @return RequestInterface
-     * @throws \Enm\JsonApi\Exception\BadRequestException
+     * @throws Throwable
      */
-    protected function createRequest(
+    private function createJsonApiRequest(
         string $method,
         UriInterface $path,
         ?DocumentInterface $body = null
     ): RequestInterface {
-        $url = (array)parse_url($this->baseUrl);
+        $uri = $this->uriFactory->createUri($this->baseUrl);
 
-        $requestUri = $path;
-        if (array_key_exists('scheme', $url)) {
-            $requestUri = $requestUri->withScheme((string)$url['scheme']);
-        }
-        if (array_key_exists('host', $url)) {
-            $requestUri = $requestUri->withHost((string)$url['host']);
-        }
-        if (array_key_exists('port', $url)) {
-            $requestUri = $requestUri->withPort((string)$url['port']);
-        }
-        if (array_key_exists('user', $url)) {
-            $password = null;
-            if (array_key_exists('pass', $url)) {
-                $password = (string)$url['pass'];
+        if ((string)$path->getHost() !== '') {
+            $uri = $uri->withScheme($path->getScheme())
+                ->withHost($path->getHost())
+                ->withPort($path->getPort());
+
+            if ((string)$path->getUserInfo() !== '') {
+
+                $parts = explode(':', $path->getUserInfo(), 2);
+                $password = null;
+                if (count($parts) === 2) {
+                    $password = $parts[1];
+                }
+                $uri = $uri->withUserInfo($parts[0], $password);
             }
-            $requestUri = $requestUri->withUserInfo((string)$url['user'], $password);
+        }
+
+        if ((string)$path->getQuery() !== '') {
+
+            if ((string)$uri->getQuery() === '') {
+                $uri = $uri->withQuery($path->getQuery());
+            } else {
+                $pathQuery = [];
+                parse_str($path->getQuery(), $pathQuery);
+                $uriQuery = [];
+                parse_str($uri->getQuery(), $uriQuery);
+                $uri->withQuery(http_build_query(array_merge($uriQuery, $pathQuery)));
+            }
         }
 
         $prefix = null;
-        if (array_key_exists('path', $url)) {
-            $prefix = trim($url['path'], '/');
+        if ((string)$uri->getPath() !== '') {
+            $prefix = trim($uri->getPath(), '/');
             if (!empty($prefix)) {
                 $prefix .= '/';
             }
         }
 
-        $requestUri = $requestUri->withPath('/' . $prefix . trim($requestUri->getPath(), '/'));
+        $uri = $uri->withPath('/' . $prefix . trim($path->getPath(), '/'));
 
-        return new Request($method, $requestUri, $body, $prefix);
+        return new Request($method, $uri, $body, $prefix);
     }
 }
