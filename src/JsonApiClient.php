@@ -210,6 +210,19 @@ class JsonApiClient
             }
         }
 
+        if ((string)$path->getQuery() !== '') {
+
+            if ((string)$uri->getQuery() === '') {
+                $uri = $uri->withQuery($path->getQuery());
+            } else {
+                $pathQuery = [];
+                parse_str($path->getQuery(), $pathQuery);
+                $uriQuery = [];
+                parse_str($uri->getQuery(), $uriQuery);
+                $uri->withQuery(http_build_query(array_merge($uriQuery, $pathQuery)));
+            }
+        }
+
         $prefix = null;
         if ((string)$uri->getPath() !== '') {
             $prefix = trim($uri->getPath(), '/');
