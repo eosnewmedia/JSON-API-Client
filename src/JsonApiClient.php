@@ -138,7 +138,7 @@ class JsonApiClient
     {
         $httpRequest = $this->requestFactory->createRequest($request->method(), $request->uri());
         if ($request->requestBody()) {
-            $httpRequest->withBody(
+            $httpRequest = $httpRequest->withBody(
                 $this->streamFactory->createStream(
                     json_encode($this->serializer->serializeDocument($request->requestBody()))
                 )
