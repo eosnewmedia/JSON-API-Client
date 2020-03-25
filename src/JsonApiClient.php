@@ -137,8 +137,12 @@ class JsonApiClient
     public function execute(RequestInterface $request, bool $exceptionOnFatalError = true): ResponseInterface
     {
         $httpRequest = $this->requestFactory->createRequest($request->method(), $request->uri());
+        foreach ($request->headers()->all() as $header => $value) {
+            $httpRequest = $httpRequest->withHeader($header, $value);
+        }
+
         if ($request->requestBody()) {
-            $httpRequest->withBody(
+            $httpRequest = $httpRequest->withBody(
                 $this->streamFactory->createStream(
                     json_encode($this->serializer->serializeDocument($request->requestBody()))
                 )
